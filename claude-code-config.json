@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "dotnet-api": {
+      "command": "node",
+      "args": ["../dotnet-api/src/index.js"],
+      "env": {}
+    }
+  }
+}
