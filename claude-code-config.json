@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "dotnet-api": {
-      "command": "node",
-      "args": ["../dotnet-api/src/index.js"],
+      "command": "npx",
+      "args": ["-y", "dotnet-api-mcp"],
       "env": {}
     }
   }

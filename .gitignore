@@ -120,3 +120,4 @@ dist
 config.json
 
 .claude
+claude-code-config.json
