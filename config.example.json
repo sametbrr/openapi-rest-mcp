@@ -1,0 +1,42 @@
+{
+  "environments": {
+    "local": {
+      "baseUrl": "https://localhost:7000/api",
+      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json",
+      "auth": {
+        "email": "your-email@example.com",
+        "password": "your-password"
+      }
+    },
+    "development": {
+      "baseUrl": "https://dev-api.example.com/api",
+      "swaggerUrl": "https://dev-api.example.com/swagger/v1/swagger.json",
+      "auth": {
+        "email": "your-email@example.com",
+        "password": "your-password"
+      }
+    },
+    "beta": {
+      "baseUrl": "https://beta-api.example.com/api",
+      "swaggerUrl": "https://beta-api.example.com/swagger/v1/swagger.json",
+      "auth": {
+        "email": "your-email@example.com",
+        "password": "your-password"
+      }
+    },
+    "production": {
+      "baseUrl": "https://api.example.com/api",
+      "swaggerUrl": "https://api.example.com/swagger/v1/swagger.json",
+      "auth": {
+        "email": "your-email@example.com",
+        "password": "your-password"
+      }
+    }
+  },
+  "activeEnvironment": "local",
+  "timeout": 30000,
+  "headers": {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  }
+}

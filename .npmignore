@@ -1,0 +1,35 @@
+# Development files
+.DS_Store
+*.log
+npm-debug.log*
+.npm
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Claude Config (users will create their own)
+config.json
+claude-code-config.json
+.claude/
+
+# Git
+.git/
+.gitignore
+
+# Examples and docs
+examples/
+docs/
+*.md
+!README.md
+
+# Other
+node_modules/
+.env
+.env.local

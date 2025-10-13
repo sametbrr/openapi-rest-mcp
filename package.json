@@ -1,0 +1,54 @@
+{
+  "name": "dotnet-api-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for .NET Core API CRUD operations with Swagger/OpenAPI integration",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "dotnet-api-mcp": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "files": [
+    "src/",
+    "bin/",
+    "config.example.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "dotnet",
+    "dotnet-core",
+    "api",
+    "crud",
+    "swagger",
+    "openapi",
+    "rest-api",
+    "claude-ai"
+  ],
+  "author": "Samet Birer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sametbrr/dotnet-api-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sametbrr/dotnet-api-mcp/issues"
+  },
+  "homepage": "https://github.com/sametbrr/dotnet-api-mcp#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "axios": "^1.6.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
