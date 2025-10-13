@@ -16,31 +16,64 @@ A Model Context Protocol (MCP) server that enables Claude AI to interact with .N
 - Authentication Support
 - Configurable Timeouts & Headers
 
-## Installation
+## Quick Start Guide
 
-### NPM Installation
+### Step 1: Choose Your Platform
 
-```bash
-npm install dotnet-api-mcp
-```
+#### Option A: Claude Desktop
 
-### Global Installation
-
+**Install the package:**
 ```bash
 npm install -g dotnet-api-mcp
 ```
 
-## Configuration
+**Configure Claude Desktop:**
 
-### 1. Create Configuration File
+1. Open your Claude Desktop config file:
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-Create a `config.json` file in your project root:
+2. Add the MCP server configuration:
+```json
+{
+  "mcpServers": {
+    "dotnet-api": {
+      "command": "npx",
+      "args": ["-y", "dotnet-api-mcp"],
+      "env": {}
+    }
+  }
+}
+```
 
+3. Restart Claude Desktop
+
+#### Option B: Claude Code (VSCode)
+
+**Step 1.1: Install the package in your project:**
+```bash
+npm install dotnet-api-mcp
+```
+
+**Step 1.2: Add MCP server to Claude Code:**
+```bash
+claude mcp add dotnet-api-mcp dotnet-api-mcp
+```
+
+**Step 1.3: Restart VSCode**
+
+### Step 2: Create Configuration File
+
+Create a `config.json` file in your **project root directory** (where package.json is located):
+
+**Option 1 - Copy from example:**
 ```bash
 cp node_modules/dotnet-api-mcp/config.example.json config.json
 ```
 
-Or create manually:
+**Option 2 - Create manually:**
+
+Create `config.json` with the following structure:
 
 ```json
 {
@@ -48,14 +81,6 @@ Or create manually:
     "local": {
       "baseUrl": "https://localhost:7000/api",
       "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json",
-      "auth": {
-        "email": "your-email@example.com",
-        "password": "your-password"
-      }
-    },
-    "beta": {
-      "baseUrl": "https://beta-api.example.com/api",
-      "swaggerUrl": "https://beta-api.example.com/swagger/v1/swagger.json",
       "auth": {
         "email": "your-email@example.com",
         "password": "your-password"
@@ -71,49 +96,135 @@ Or create manually:
 }
 ```
 
-### 2. Claude Desktop Integration
+### Step 3: Configure Your API Settings
 
-Add to your Claude Desktop configuration file:
+Update `config.json` with your actual API information:
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+#### Required Fields:
 
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+1. **baseUrl**: Your API base URL
+   ```json
+   "baseUrl": "https://localhost:7000/api"
+   ```
+   ⚠️ **Warning**: If missing, API requests will fail with "No base URL configured"
+
+2. **swaggerUrl**: Your Swagger/OpenAPI documentation URL
+   ```json
+   "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json"
+   ```
+   ⚠️ **Warning**: If missing, Swagger tools won't work
+
+#### Optional Fields:
+
+3. **auth** (if your API requires authentication):
+   ```json
+   "auth": {
+     "email": "your-email@example.com",
+     "password": "your-password"
+   }
+   ```
+   ℹ️ **Info**: You can omit this section if your API doesn't require authentication
+
+4. **timeout** (default: 30000ms):
+   ```json
+   "timeout": 30000
+   ```
+   ℹ️ **Info**: Increase if your API responses are slow
+
+5. **headers** (custom HTTP headers):
+   ```json
+   "headers": {
+     "Content-Type": "application/json",
+     "Accept": "application/json"
+   }
+   ```
+   ℹ️ **Info**: Add any custom headers your API requires
+
+### Step 4: Add Multiple Environments (Optional)
+
+You can configure multiple environments for different stages:
 
 ```json
 {
-  "mcpServers": {
-    "dotnet-api": {
-      "command": "npx",
-      "args": ["-y", "dotnet-api-mcp"],
-      "env": {}
+  "environments": {
+    "local": {
+      "baseUrl": "https://localhost:7000/api",
+      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json"
+    },
+    "development": {
+      "baseUrl": "https://dev-api.example.com/api",
+      "swaggerUrl": "https://dev-api.example.com/swagger/v1/swagger.json"
+    },
+    "beta": {
+      "baseUrl": "https://beta-api.example.com/api",
+      "swaggerUrl": "https://beta-api.example.com/swagger/v1/swagger.json"
+    },
+    "production": {
+      "baseUrl": "https://api.example.com/api",
+      "swaggerUrl": "https://api.example.com/swagger/v1/swagger.json"
     }
+  },
+  "activeEnvironment": "local"
+}
+```
+
+⚠️ **Warning**: Always set `activeEnvironment` to specify which environment to use.
+
+### Step 5: Verify Installation
+
+Ask Claude to test the connection:
+
+```
+"Fetch the Swagger documentation from my API"
+```
+
+If successful, you'll see the API endpoints. If not, check these common issues:
+
+**Common Issues:**
+
+| Error | Solution |
+|-------|----------|
+| "Cannot find config.json" | Ensure `config.json` is in your project root |
+| "No base URL configured" | Add `baseUrl` to your environment config |
+| "Connection refused" | Check if your API is running |
+| "Swagger not found" | Verify `swaggerUrl` is correct and accessible |
+| "Authentication failed" | Check your `auth` credentials |
+
+## Configuration Reference
+
+### Complete config.json Example
+
+```json
+{
+  "environments": {
+    "local": {
+      "baseUrl": "https://localhost:7000/api",
+      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json",
+      "auth": {
+        "email": "user@example.com",
+        "password": "password123"
+      }
+    }
+  },
+  "activeEnvironment": "local",
+  "timeout": 30000,
+  "headers": {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "X-Custom-Header": "custom-value"
   }
 }
 ```
 
-### 3. Claude Code (VSCode) Integration
+### Environment Switching
 
-Add to your project's `claude-code-config.json`:
+To switch between environments, update `activeEnvironment`:
 
 ```json
 {
-  "mcpServers": {
-    "dotnet-api": {
-      "command": "node",
-      "args": ["./node_modules/dotnet-api-mcp/src/index.js"],
-      "env": {}
-    }
-  }
+  "activeEnvironment": "production"
 }
 ```
-
-### 4. claude.ai (Web) Integration
-
-1. Go to claude.ai
-2. Click on "Connect" or "Settings"
-3. Add MCP Server with:
-   - Command: `npx`
-   - Args: `-y dotnet-api-mcp`
 
 ## Available Tools
 
@@ -221,18 +332,6 @@ const mcp = spawn('node', ['node_modules/dotnet-api-mcp/src/index.js']);
 
 // MCP server is now running and can receive requests
 ```
-
-## Environment Management
-
-Switch between environments by updating `activeEnvironment` in `config.json`:
-
-```json
-{
-  "activeEnvironment": "beta"
-}
-```
-
-Or define multiple environments and switch as needed.
 
 ## Development
 

@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "dotnet-api": {
-      "command": "npx",
-      "args": ["-y", "dotnet-api-mcp"],
-      "env": {}
-    }
-  }
-}
