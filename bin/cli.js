@@ -1,3 +1,8 @@
 #!/usr/bin/env node
 
-import '../src/index.js';
+import { main } from '../src/index.js';
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exit(1);
+});

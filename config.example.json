@@ -2,39 +2,74 @@
   "environments": {
     "local": {
       "baseUrl": "https://localhost:7000/api",
-      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json",
+      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json"
+    },
+    "bearer-example": {
+      "baseUrl": "https://api.example.com",
+      "swaggerUrl": "https://api.example.com/swagger/v1/swagger.json",
       "auth": {
-        "email": "your-email@example.com",
-        "password": "your-password"
+        "type": "bearer",
+        "token": "${API_TOKEN}"
       }
     },
-    "development": {
-      "baseUrl": "https://dev-api.example.com/api",
-      "swaggerUrl": "https://dev-api.example.com/swagger/v1/swagger.json",
+    "apikey-example": {
+      "baseUrl": "https://api.example.com",
       "auth": {
-        "email": "your-email@example.com",
-        "password": "your-password"
+        "type": "apiKey",
+        "in": "header",
+        "headerName": "X-Api-Key",
+        "value": "${API_KEY}"
       }
     },
-    "beta": {
-      "baseUrl": "https://beta-api.example.com/api",
-      "swaggerUrl": "https://beta-api.example.com/swagger/v1/swagger.json",
+    "basic-example": {
+      "baseUrl": "https://api.example.com",
       "auth": {
-        "email": "your-email@example.com",
-        "password": "your-password"
+        "type": "basic",
+        "username": "${API_USER}",
+        "password": "${API_PASS}"
+      }
+    },
+    "login-example": {
+      "baseUrl": "https://api.example.com/api",
+      "swaggerUrl": "https://api.example.com/swagger/v1/swagger.json",
+      "auth": {
+        "type": "login",
+        "loginUrl": "https://api.example.com/api/auth/login",
+        "credentials": {
+          "email": "${API_USER}",
+          "password": "${API_PASS}"
+        },
+        "tokenPath": "data.accessToken",
+        "expiresInPath": "data.expiresIn",
+        "headerName": "Authorization",
+        "headerPrefix": "Bearer "
+      }
+    },
+    "login-auto-example": {
+      "baseUrl": "https://api.example.com/api",
+      "swaggerUrl": "https://api.example.com/swagger/v1/swagger.json",
+      "auth": {
+        "type": "login",
+        "credentials": {
+          "email": "${API_USER}",
+          "password": "${API_PASS}"
+        }
       }
     },
     "production": {
       "baseUrl": "https://api.example.com/api",
       "swaggerUrl": "https://api.example.com/swagger/v1/swagger.json",
+      "rejectUnauthorized": true,
       "auth": {
-        "email": "your-email@example.com",
-        "password": "your-password"
+        "type": "bearer",
+        "token": "${PROD_API_TOKEN}"
       }
     }
   },
   "activeEnvironment": "local",
   "timeout": 30000,
+  "swaggerCacheTtl": 300,
+  "maxResponseChars": 100000,
   "headers": {
     "Content-Type": "application/json",
     "Accept": "application/json"

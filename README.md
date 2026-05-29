@@ -1,90 +1,109 @@
-# .NET Core API MCP Server
+# OpenAPI REST MCP Server
 
-[![npm version](https://badge.fury.io/js/dotnet-api-mcp.svg)](https://badge.fury.io/js/dotnet-api-mcp)
+[![npm version](https://badge.fury.io/js/openapi-rest-mcp.svg)](https://badge.fury.io/js/openapi-rest-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Model Context Protocol (MCP) server that enables Claude AI to interact with .NET Core APIs through CRUD operations and Swagger/OpenAPI integration.
+**EN:** A Model Context Protocol (MCP) server that lets Claude AI talk to **any OpenAPI/Swagger REST API** through CRUD operations and Swagger/OpenAPI integration — works great with .NET, Node, Spring, FastAPI and more. Flexible per-environment authentication (including zero-config auto-login), `${ENV_VAR}` secret injection, fuzzy endpoint search, and `$ref`-inlined schema discovery.
 
-## Features
+**TR:** Claude AI'ın **herhangi bir OpenAPI/Swagger REST API'siyle** CRUD işlemleri ve Swagger/OpenAPI entegrasyonu üzerinden konuşmasını sağlayan bir Model Context Protocol (MCP) sunucusu — .NET, Node, Spring, FastAPI ve daha fazlasıyla sorunsuz çalışır. Ortam bazlı esnek kimlik doğrulama (sıfır-config otomatik login dahil), `${ENV_VAR}` ile gizli bilgi enjeksiyonu, bulanık endpoint araması ve `$ref` çözümlemeli şema keşfi sunar.
 
-- HTTP Methods Support (GET, POST, PUT, DELETE, PATCH)
-- Swagger/OpenAPI Integration
-- Multi-environment Configuration (local, development, beta, production)
-- Automatic Endpoint Discovery
-- Model/Schema Tracking
-- Dynamic Query Parameters
-- Authentication Support
-- Configurable Timeouts & Headers
+---
 
-## Quick Start Guide
+## ✨ Features | Özellikler
 
-### Step 1: Choose Your Platform
+**EN:**
+- ✅ HTTP methods: GET, POST, PUT, DELETE, PATCH
+- ✅ Swagger/OpenAPI integration with `$ref` inlining
+- ✅ Multiple named environments (local, development, beta, production, …)
+- ✅ Endpoint discovery, **fuzzy keyword search**, and schema retrieval from Swagger
+- ✅ Flexible auth per environment: `none`, `bearer`, `apiKey`, `basic`, `login`
+- ✅ **Zero-config `login`**: auto-discovers the login endpoint and auto-detects the token in the response (or set them explicitly)
+- ✅ `inspect_login` tool to discover the right token path without guessing
+- ✅ **Response truncation** (`maxResponseChars` / per-call `maxChars`) to protect the context window
+- ✅ `${ENV_VAR}` substitution — keep secrets out of `config.json`
+- ✅ Configurable config path (`--config`, `OPENAPI_MCP_CONFIG`)
+- ✅ Per-environment TLS control and Swagger response caching
 
-#### Option A: Claude Desktop
+**TR:**
+- ✅ HTTP metodları: GET, POST, PUT, DELETE, PATCH
+- ✅ `$ref` çözümlemeli Swagger/OpenAPI entegrasyonu
+- ✅ Birden çok adlandırılmış ortam (local, development, beta, production, …)
+- ✅ Swagger'dan endpoint keşfi, **bulanık (fuzzy) anahtar kelime araması** ve şema getirme
+- ✅ Ortam bazlı esnek kimlik doğrulama: `none`, `bearer`, `apiKey`, `basic`, `login`
+- ✅ **Sıfır-config `login`**: login endpoint'ini otomatik bulur ve yanıttaki token'ı otomatik tespit eder (veya açıkça belirtin)
+- ✅ Doğru token yolunu tahmin etmeden bulmak için `inspect_login` aracı
+- ✅ Context penceresini korumak için **yanıt kısaltma** (`maxResponseChars` / çağrı bazlı `maxChars`)
+- ✅ `${ENV_VAR}` ikamesi — gizli bilgileri `config.json` dışında tutun
+- ✅ Yapılandırılabilir config yolu (`--config`, `OPENAPI_MCP_CONFIG`)
+- ✅ Ortam bazlı TLS kontrolü ve Swagger yanıt önbelleği
 
-**Install the package:**
+---
+
+## 🚀 Quick Start | Hızlı Başlangıç
+
+### Option A: Claude Desktop | Seçenek A: Claude Desktop
+
+**EN:** Install the package:
+
+**TR:** Paketi kurun:
+
 ```bash
-npm install -g dotnet-api-mcp
+npm install -g openapi-rest-mcp
 ```
 
-**Configure Claude Desktop:**
+**EN:** Open your Claude Desktop config file and add the server:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-1. Open your Claude Desktop config file:
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+**TR:** Claude Desktop yapılandırma dosyanızı açın ve sunucuyu ekleyin:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-2. Add the MCP server configuration:
 ```json
 {
   "mcpServers": {
-    "dotnet-api": {
+    "openapi-rest": {
       "command": "npx",
-      "args": ["-y", "dotnet-api-mcp"],
-      "env": {}
+      "args": ["-y", "openapi-rest-mcp", "--config", "/absolute/path/to/config.json"],
+      "env": { "API_USER": "...", "API_PASS": "..." }
     }
   }
 }
 ```
 
-3. Restart Claude Desktop
+**EN:** Restart Claude Desktop afterwards.
 
-#### Option B: Claude Code (VSCode)
+**TR:** Ardından Claude Desktop'ı yeniden başlatın.
 
-**Step 1.1: Install the package in your project:**
+### Option B: Claude Code | Seçenek B: Claude Code
+
 ```bash
-npm install dotnet-api-mcp
+npm install openapi-rest-mcp
+claude mcp add openapi-rest openapi-rest-mcp -- --config /absolute/path/to/config.json
 ```
 
-**Step 1.2: Add MCP server to Claude Code:**
+---
+
+## ⚙️ Configuration | Yapılandırma
+
+**EN:** Copy the example and edit it:
+
+**TR:** Örneği kopyalayıp düzenleyin:
+
 ```bash
-claude mcp add dotnet-api-mcp dotnet-api-mcp
+cp node_modules/openapi-rest-mcp/config.example.json config.json
 ```
 
-**Step 1.3: Restart VSCode**
+**EN:** Minimal `config.json`:
 
-### Step 2: Create Configuration File
-
-Create a `config.json` file in your **project root directory** (where package.json is located):
-
-**Option 1 - Copy from example:**
-```bash
-cp node_modules/dotnet-api-mcp/config.example.json config.json
-```
-
-**Option 2 - Create manually:**
-
-Create `config.json` with the following structure:
+**TR:** Asgari `config.json`:
 
 ```json
 {
   "environments": {
     "local": {
       "baseUrl": "https://localhost:7000/api",
-      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json",
-      "auth": {
-        "email": "your-email@example.com",
-        "password": "your-password"
-      }
+      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json"
     }
   },
   "activeEnvironment": "local",
@@ -96,295 +115,247 @@ Create `config.json` with the following structure:
 }
 ```
 
-### Step 3: Configure Your API Settings
+### Choosing the config file | Config dosyasını seçme
 
-Update `config.json` with your actual API information:
+**EN:** The server resolves `config.json` in this order:
 
-#### Required Fields:
+**TR:** Sunucu `config.json` dosyasını şu sırayla çözer:
 
-1. **baseUrl**: Your API base URL
-   ```json
-   "baseUrl": "https://localhost:7000/api"
-   ```
-   ⚠️ **Warning**: If missing, API requests will fail with "No base URL configured"
+1. `--config <path>` / `-c <path>` — CLI flag | CLI argümanı
+2. `OPENAPI_MCP_CONFIG` — environment variable (`DOTNET_API_CONFIG` also accepted) | ortam değişkeni (`DOTNET_API_CONFIG` da kabul edilir)
+3. `./config.json` — current working directory | çalışma dizini
 
-2. **swaggerUrl**: Your Swagger/OpenAPI documentation URL
-   ```json
-   "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json"
-   ```
-   ⚠️ **Warning**: If missing, Swagger tools won't work
+```bash
+# Explicit path | Açık yol
+openapi-rest-mcp --config /etc/openapi-mcp/config.json
 
-#### Optional Fields:
+# Via environment variable | Ortam değişkeni ile
+OPENAPI_MCP_CONFIG=/etc/openapi-mcp/config.json openapi-rest-mcp
+```
 
-3. **auth** (if your API requires authentication):
-   ```json
-   "auth": {
-     "email": "your-email@example.com",
-     "password": "your-password"
-   }
-   ```
-   ℹ️ **Info**: You can omit this section if your API doesn't require authentication
+### Config field reference | Config alan referansı
 
-4. **timeout** (default: 30000ms):
-   ```json
-   "timeout": 30000
-   ```
-   ℹ️ **Info**: Increase if your API responses are slow
+| Field / Alan | Scope / Kapsam | Default / Varsayılan | Description / Açıklama |
+|---|---|---|---|
+| `environments` | root | — | Map of named environments (required) / Adlandırılmış ortamlar (zorunlu) |
+| `activeEnvironment` | root | — | Default environment to use (required) / Varsayılan ortam (zorunlu) |
+| `timeout` | root | `30000` | Request timeout in ms / İstek zaman aşımı (ms) |
+| `swaggerCacheTtl` | root | `300` | Seconds to cache Swagger docs / Swagger önbellek süresi (sn) |
+| `maxResponseChars` | root | `100000` | Max chars per tool response (`0` = unlimited; override per call with `maxChars`) / Araç yanıtı başına azami karakter (`0` = sınırsız; çağrı başına `maxChars` ile değiştirilir) |
+| `headers` | root | JSON defaults | Headers merged into every request / Her isteğe eklenen header'lar |
+| `rejectUnauthorized` | root / env | `true` (auto-`false` for localhost) | TLS verification / TLS doğrulaması |
+| `baseUrl` | env | — | Base URL for relative paths / Göreli yollar için temel URL |
+| `swaggerUrl` | env | — | Swagger/OpenAPI JSON URL |
+| `auth` | env | none | Authentication block (see below) / Kimlik doğrulama bloğu (aşağıya bakın) |
 
-5. **headers** (custom HTTP headers):
-   ```json
-   "headers": {
-     "Content-Type": "application/json",
-     "Accept": "application/json"
-   }
-   ```
-   ℹ️ **Info**: Add any custom headers your API requires
+**EN:** Any string value may contain `${ENV_VAR}` placeholders, replaced with the matching environment variable at load time.
 
-### Step 4: Add Multiple Environments (Optional)
+**TR:** Herhangi bir string değer `${ENV_VAR}` yer tutucusu içerebilir; yükleme anında ilgili ortam değişkeniyle değiştirilir.
 
-You can configure multiple environments for different stages:
+---
+
+## 🔐 Authentication | Kimlik Doğrulama
+
+**EN:** Auth is configured **per environment** via an `auth` object with a `type`. Omit the `auth` block entirely if your API is public — every API can be different.
+
+**TR:** Kimlik doğrulama, `type` içeren bir `auth` nesnesiyle **ortam bazında** yapılandırılır. API'niz herkese açıksa `auth` bloğunu hiç eklemeyin — her API farklı olabilir.
+
+**`bearer`** — static bearer token | sabit bearer token:
+```json
+"auth": { "type": "bearer", "token": "${API_TOKEN}" }
+```
+
+**`apiKey`** — API key in a header or query (`"in": "query"`) | header veya query'de API anahtarı:
+```json
+"auth": { "type": "apiKey", "in": "header", "headerName": "X-Api-Key", "value": "${API_KEY}" }
+```
+
+**`basic`** — HTTP basic auth | HTTP basic kimlik doğrulama:
+```json
+"auth": { "type": "basic", "username": "${API_USER}", "password": "${API_PASS}" }
+```
+
+**`login`** — POST credentials, then reuse the returned token (cached and refreshed automatically) | kimlik bilgilerini POST eder, dönen token'ı (otomatik önbelleğe alınır ve yenilenir) tekrar kullanır.
+
+**EN:** `loginUrl`, `tokenPath` and the expiry fields are all **optional** — when omitted, the server auto-discovers the login endpoint from the Swagger spec and auto-detects the token (and its lifetime) in the response. Set them explicitly to override the automatic behavior.
+
+**TR:** `loginUrl`, `tokenPath` ve süre alanlarının hepsi **opsiyoneldir** — belirtilmezse sunucu login endpoint'ini Swagger'dan otomatik bulur ve token'ı (ve süresini) yanıttan otomatik tespit eder. Otomatik davranışı geçersiz kılmak için bunları açıkça belirtin.
+
+Zero-config / Sıfır-config (auto):
+```json
+"auth": {
+  "type": "login",
+  "credentials": { "email": "${API_USER}", "password": "${API_PASS}" }
+}
+```
+
+Explicit / Açık (manuel):
+```json
+"auth": {
+  "type": "login",
+  "loginUrl": "https://api.example.com/api/auth/login",
+  "credentials": { "email": "${API_USER}", "password": "${API_PASS}" },
+  "tokenPath": "data.accessToken",
+  "expiresInPath": "data.expiresIn",
+  "headerName": "Authorization",
+  "headerPrefix": "Bearer "
+}
+```
+
+> **EN — Tip:** if auto-detection picks the wrong token, run the `inspect_login` tool — it posts your credentials and returns the raw response plus suggested `tokenPath` values, so you can copy the exact one into your config.
+>
+> **TR — İpucu:** otomatik tespit yanlış token'ı seçerse `inspect_login` aracını çalıştırın — kimlik bilgilerinizi POST edip ham yanıtı ve önerilen `tokenPath` değerlerini döndürür; doğru olanı config'inize kopyalayabilirsiniz.
+
+| `login` field / alanı | Required / Zorunlu | Description / Açıklama |
+|---|---|---|
+| `credentials` | recommended / önerilir | Body posted to the login endpoint / Login endpoint'ine gönderilen gövde |
+| `loginUrl` | optional / opsiyonel | Login endpoint; auto-discovered from Swagger if omitted / Belirtilmezse Swagger'dan otomatik bulunur |
+| `tokenPath` | optional / opsiyonel | Dot-path to the token; auto-detected if omitted / Token'a giden nokta-yol; belirtilmezse otomatik tespit edilir |
+| `expiresIn` / `expiresInPath` | optional / opsiyonel | Token lifetime (seconds / response path); auto-detected if omitted / Token ömrü (saniye / yanıt yolu); belirtilmezse otomatik |
+| `headerName` / `headerPrefix` | optional / opsiyonel | Defaults to `Authorization` / `Bearer ` / Varsayılan `Authorization` / `Bearer ` |
+| `method` / `headers` | optional / opsiyonel | Login request method (default `POST`) and extra headers / Login istek metodu (varsayılan `POST`) ve ek header'lar |
+
+> **EN — Migrating from 1.x:** the old flat `auth: { email, password }` is no longer supported. Move those values into an `auth` object — most APIs map to `type: "login"` or `type: "basic"`.
+>
+> **TR — 1.x'ten geçiş:** eski düz `auth: { email, password }` artık desteklenmiyor. Bu değerleri bir `auth` nesnesine taşıyın — çoğu API `type: "login"` veya `type: "basic"` ile eşleşir.
+
+---
+
+## 🌍 Multiple environments | Çoklu ortam
+
+**EN:** Define as many environments as you need and switch via `activeEnvironment` (or pass `environment` to any tool).
+
+**TR:** İhtiyacınız kadar ortam tanımlayın ve `activeEnvironment` ile geçiş yapın (veya herhangi bir araca `environment` geçirin).
 
 ```json
 {
   "environments": {
-    "local": {
-      "baseUrl": "https://localhost:7000/api",
-      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json"
-    },
-    "development": {
-      "baseUrl": "https://dev-api.example.com/api",
-      "swaggerUrl": "https://dev-api.example.com/swagger/v1/swagger.json"
-    },
-    "beta": {
-      "baseUrl": "https://beta-api.example.com/api",
-      "swaggerUrl": "https://beta-api.example.com/swagger/v1/swagger.json"
-    },
-    "production": {
+    "local":       { "baseUrl": "https://localhost:7000/api", "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json" },
+    "development":  { "baseUrl": "https://dev-api.example.com/api", "swaggerUrl": "https://dev-api.example.com/swagger/v1/swagger.json" },
+    "beta":         { "baseUrl": "https://beta-api.example.com/api", "swaggerUrl": "https://beta-api.example.com/swagger/v1/swagger.json" },
+    "production":   {
       "baseUrl": "https://api.example.com/api",
-      "swaggerUrl": "https://api.example.com/swagger/v1/swagger.json"
+      "swaggerUrl": "https://api.example.com/swagger/v1/swagger.json",
+      "rejectUnauthorized": true,
+      "auth": { "type": "bearer", "token": "${PROD_API_TOKEN}" }
     }
   },
   "activeEnvironment": "local"
 }
 ```
 
-⚠️ **Warning**: Always set `activeEnvironment` to specify which environment to use.
+---
 
-### Step 5: Verify Installation
+## 🛠️ Available tools | Mevcut araçlar
 
-Ask Claude to test the connection:
+**EN:** URLs can be absolute (`https://host/path`) or relative to the environment's `baseUrl` (e.g. `/users`). Every tool also accepts `environment` (override the active one) and `maxChars` (`0` = unlimited).
 
-```
-"Fetch the Swagger documentation from my API"
-```
+**TR:** URL'ler mutlak (`https://host/path`) veya ortamın `baseUrl`'ine göre göreli (örn. `/users`) olabilir. Her araç ayrıca `environment` (aktif ortamı geçersiz kılar) ve `maxChars` (`0` = sınırsız) kabul eder.
 
-If successful, you'll see the API endpoints. If not, check these common issues:
+| Tool / Araç | Description / Açıklama |
+|---|---|
+| `api_get` | GET request / GET isteği |
+| `api_post` | POST request (create) / POST isteği (oluşturma) |
+| `api_put` | PUT request (replace) / PUT isteği (değiştirme) |
+| `api_delete` | DELETE request / DELETE isteği |
+| `api_patch` | PATCH request (partial update) / PATCH isteği (kısmi güncelleme) |
+| `inspect_login` | Probe the login endpoint; return raw response + suggested token paths / Login endpoint'ini yokla; ham yanıt + önerilen token yollarını döndür |
+| `swagger_fetch` | Fetch & summarize Swagger doc / Swagger dokümanını getir ve özetle |
+| `swagger_list_endpoints` | List endpoints (`search` keyword, `tag`/`method` filters, `limit`) / Endpoint'leri listele (`search` kelime, `tag`/`method` filtreleri, `limit`) |
+| `swagger_get_endpoint` | Endpoint detail with `$ref` inlining / `$ref` çözümlemeli endpoint detayı |
+| `swagger_get_schema` | Schema/model definition / Şema/model tanımı |
 
-**Common Issues:**
+**EN:** Examples:
 
-| Error | Solution |
-|-------|----------|
-| "Cannot find config.json" | Ensure `config.json` is in your project root |
-| "No base URL configured" | Add `baseUrl` to your environment config |
-| "Connection refused" | Check if your API is running |
-| "Swagger not found" | Verify `swaggerUrl` is correct and accessible |
-| "Authentication failed" | Check your `auth` credentials |
+**TR:** Örnekler:
 
-## Configuration Reference
-
-### Complete config.json Example
-
-```json
-{
-  "environments": {
-    "local": {
-      "baseUrl": "https://localhost:7000/api",
-      "swaggerUrl": "https://localhost:7000/swagger/v1/swagger.json",
-      "auth": {
-        "email": "user@example.com",
-        "password": "password123"
-      }
-    }
-  },
-  "activeEnvironment": "local",
-  "timeout": 30000,
-  "headers": {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-    "X-Custom-Header": "custom-value"
-  }
-}
-```
-
-### Environment Switching
-
-To switch between environments, update `activeEnvironment`:
-
-```json
-{
-  "activeEnvironment": "production"
-}
-```
-
-## Available Tools
-
-### HTTP Request Tools
-
-#### `api_get`
-Make GET requests to your API
 ```javascript
-// List all users
-api_get("/users")
-
-// Get user by ID with params
-api_get("/users/123", { include: "profile" })
-```
-
-#### `api_post`
-Make POST requests to create resources
-```javascript
-api_post("/users", {
-  "name": "John Doe",
-  "email": "john@example.com"
-})
-```
-
-#### `api_put`
-Make PUT requests to update resources
-```javascript
-api_put("/users/123", {
-  "name": "Jane Doe",
-  "email": "jane@example.com"
-})
-```
-
-#### `api_delete`
-Make DELETE requests
-```javascript
+api_get("/users", { include: "profile" })
+api_post("/users", { name: "John Doe", email: "john@example.com" })
+api_put("/users/123", { name: "Jane Doe" })
 api_delete("/users/123")
-```
+api_patch("/users/123", { email: "new@example.com" })
+api_get("/reports/huge", {}, { maxChars: 0 })   // unlimited / sınırsız
 
-#### `api_patch`
-Make PATCH requests for partial updates
-```javascript
-api_patch("/users/123", {
-  "email": "newemail@example.com"
-})
-```
-
-### Swagger/OpenAPI Tools
-
-#### `swagger_fetch`
-Fetch Swagger/OpenAPI documentation
-```javascript
+inspect_login({ environment: "local" })           // find the token path / token yolunu bul
 swagger_fetch({ environment: "beta" })
-```
-
-#### `swagger_list_endpoints`
-List all API endpoints
-```javascript
-// List all endpoints
-swagger_list_endpoints()
-
-// Filter by tag
-swagger_list_endpoints({ tag: "User" })
-
-// Filter by method
-swagger_list_endpoints({ method: "POST" })
-```
-
-#### `swagger_get_endpoint`
-Get detailed information about a specific endpoint
-```javascript
-swagger_get_endpoint({
-  path: "/api/users/{id}",
-  method: "GET"
-})
-```
-
-#### `swagger_get_schema`
-Get model/schema definition from Swagger
-```javascript
+swagger_list_endpoints({ search: "order create", limit: 10 })  // fuzzy search / bulanık arama
+swagger_list_endpoints({ tag: "User", method: "POST" })
+swagger_get_endpoint({ path: "/api/users/{id}", method: "GET" })
 swagger_get_schema({ schemaName: "UserDto" })
 ```
 
-## Usage Examples
+---
 
-### With Claude Desktop
+## 🧪 Verify installation | Kurulumu doğrulama
 
-```
-You: "Fetch the Swagger documentation for my API"
-Claude: [Uses swagger_fetch tool]
+**EN:** Check the CLI works, then ask Claude to hit your API:
 
-You: "List all users from the beta environment"
-Claude: [Uses api_get with /users endpoint]
-
-You: "Create a new product with name 'Laptop' and price 999"
-Claude: [Uses api_post with /products endpoint]
-```
-
-### Programmatic Usage
-
-```javascript
-import { spawn } from 'child_process';
-
-const mcp = spawn('node', ['node_modules/dotnet-api-mcp/src/index.js']);
-
-// MCP server is now running and can receive requests
-```
-
-## Development
-
-### Running Locally
+**TR:** Önce CLI'ın çalıştığını kontrol edin, sonra Claude'dan API'nize istek atmasını isteyin:
 
 ```bash
-git clone https://github.com/sametbrr/dotnet-api-mcp.git
-cd dotnet-api-mcp
+npx openapi-rest-mcp --version
+npx openapi-rest-mcp --help
+```
+
+```
+You / Siz: "Fetch the Swagger documentation from my API"
+Claude: [uses swagger_fetch / swagger_fetch kullanır]
+```
+
+| Error / Hata | Solution / Çözüm |
+|---|---|
+| `config.json not found` | Pass `--config` or set `OPENAPI_MCP_CONFIG` / `--config` geçin ya da `OPENAPI_MCP_CONFIG` ayarlayın |
+| `Relative URL requires a baseUrl` | Add `baseUrl` to the environment / Ortama `baseUrl` ekleyin |
+| `Failed to fetch Swagger` | Check `swaggerUrl` is reachable / `swaggerUrl` erişilebilir mi kontrol edin |
+| `Login ... failed` | Check `loginUrl`, `credentials`, `tokenPath` / `loginUrl`, `credentials`, `tokenPath` kontrol edin |
+| TLS / certificate errors | Set `rejectUnauthorized: false` for that environment / O ortam için `rejectUnauthorized: false` yapın |
+
+---
+
+## 💻 Development | Geliştirme
+
+```bash
+git clone https://github.com/sametbrr/openapi-rest-mcp.git
+cd openapi-rest-mcp
 npm install
-npm start
+npm start          # run the server | sunucuyu çalıştır
+npm run dev        # auto-reload | otomatik yeniden yükleme
+npm test           # mock-API smoke test | sahte API ile duman testi
 ```
 
-### Development Mode (with auto-reload)
+### Publishing | Yayınlama
+
+**EN:** Pushing a `vX.Y.Z` git tag triggers the GitHub Actions workflow that publishes to npm and creates a GitHub Release. The tag must match the `version` in `package.json`, and an `NPM_TOKEN` repository secret must be set.
+
+**TR:** `vX.Y.Z` formatında bir git tag'i push etmek, npm'e yayınlayan ve GitHub Release oluşturan GitHub Actions workflow'unu tetikler. Tag, `package.json` içindeki `version` ile eşleşmeli ve depoda `NPM_TOKEN` secret'ı tanımlı olmalıdır.
 
 ```bash
-npm run dev
+git tag v2.1.0
+git push origin v2.1.0
 ```
 
-## Troubleshooting
+---
 
-### Connection Issues
-- Verify your API URL in `config.json`
-- Check if API accepts CORS requests
-- Ensure SSL certificates are valid
-
-### Authentication Errors
-- Update auth credentials in `config.json`
-- Check if API requires token-based auth
-
-### Swagger Not Loading
-- Verify `swaggerUrl` is accessible
-- Ensure Swagger JSON endpoint is exposed
-
-## Requirements
+## 📋 Requirements | Gereksinimler
 
 - Node.js >= 18.0.0
-- .NET Core API with Swagger/OpenAPI support
+- **EN:** Any REST API with an OpenAPI/Swagger JSON endpoint (.NET, Node, Spring, FastAPI, …).
+- **TR:** OpenAPI/Swagger JSON endpoint'ine sahip herhangi bir REST API (.NET, Node, Spring, FastAPI, …).
 
-## Contributing
+## 📁 License | Lisans
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+**EN:** MIT — see [LICENSE](LICENSE).
 
-## License
+**TR:** MIT — bkz. [LICENSE](LICENSE).
 
-MIT License - see LICENSE file for details
-
-## Author
+## 👤 Author | Yazar
 
 Samet Birer
 
-## Links
+## 🔗 Links | Bağlantılar
 
-- [GitHub Repository](https://github.com/sametbrr/dotnet-api-mcp)
-- [NPM Package](https://www.npmjs.com/package/dotnet-api-mcp)
-- [Report Issues](https://github.com/sametbrr/dotnet-api-mcp/issues)
+- [GitHub Repository](https://github.com/sametbrr/openapi-rest-mcp)
+- [NPM Package](https://www.npmjs.com/package/openapi-rest-mcp)
+- [Report Issues](https://github.com/sametbrr/openapi-rest-mcp/issues)
 - [Model Context Protocol](https://modelcontextprotocol.io)

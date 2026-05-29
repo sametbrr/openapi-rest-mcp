@@ -1,15 +1,16 @@
 {
-  "name": "dotnet-api-mcp",
-  "version": "1.0.0",
-  "description": "MCP server for .NET Core API CRUD operations with Swagger/OpenAPI integration",
+  "name": "openapi-rest-mcp",
+  "version": "2.1.0",
+  "description": "MCP server for any OpenAPI/Swagger REST API: CRUD calls, endpoint & schema discovery, fuzzy search, and flexible auth (bearer/apiKey/basic/auto-login). .NET-friendly.",
   "main": "src/index.js",
   "type": "module",
   "bin": {
-    "dotnet-api-mcp": "./bin/cli.js"
+    "openapi-rest-mcp": "./bin/cli.js"
   },
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "test": "node test/smoke.mjs"
   },
   "files": [
     "src/",
@@ -21,32 +22,32 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "dotnet",
-    "dotnet-core",
+    "openapi",
+    "swagger",
+    "rest-api",
     "api",
     "crud",
-    "swagger",
-    "openapi",
-    "rest-api",
-    "claude-ai"
+    "api-testing",
+    "claude-ai",
+    "cursor",
+    "dotnet"
   ],
   "author": "Samet Birer",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sametbrr/dotnet-api-mcp.git"
+    "url": "git+https://github.com/sametbrr/openapi-rest-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/sametbrr/dotnet-api-mcp/issues"
+    "url": "https://github.com/sametbrr/openapi-rest-mcp/issues"
   },
-  "homepage": "https://github.com/sametbrr/dotnet-api-mcp#readme",
+  "homepage": "https://github.com/sametbrr/openapi-rest-mcp#readme",
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.4.0",
-    "axios": "^1.6.0",
-    "zod": "^3.22.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0"
