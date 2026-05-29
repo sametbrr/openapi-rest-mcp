@@ -31,13 +31,24 @@ const server = http.createServer((req, res) => {
   res.end(JSON.stringify({ error: 'not found' }));
 });
 
+// A second "attacker" host on a different port: any Authorization header that
+// reaches it would be a credential leak.
+let attackerGotAuth = 'UNSET';
+const attacker = http.createServer((req, res) => {
+  attackerGotAuth = req.headers.authorization || null;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ ok: true }));
+});
+
 const assert = (cond, msg) => {
   if (!cond) throw new Error('FAIL: ' + msg);
   console.log('  ✓ ' + msg);
 };
 
 await new Promise((r) => server.listen(0, r));
+await new Promise((r) => attacker.listen(0, r));
 const port = server.address().port;
+const attackerBase = `http://127.0.0.1:${attacker.address().port}`;
 const base = `http://127.0.0.1:${port}`;
 
 // Config with auth.type=login but NO loginUrl and NO tokenPath -> exercises auto.
@@ -84,6 +95,43 @@ try {
   const full = (await srv.handleSwaggerListEndpoints({ environment: 'mock', maxChars: 0 })).content[0].text;
   assert(!full.includes('truncated'), 'maxChars:0 = unlimited (no truncation)');
 
+  console.log('5) missing config: server starts, tools steer to config_init (no crash):');
+  const missingPath = new URL('./.tmp.missing.json', import.meta.url).pathname;
+  try { unlinkSync(missingPath); } catch {}
+  const noCfg = new OpenApiMcpServer(missingPath);
+  assert(noCfg.config === null && !!noCfg.configError, 'config=null + configError set');
+  assert(/config_init/.test(noCfg.configError), 'configError points to config_init');
+  const status = JSON.parse(noCfg.handleConfigStatus({}).content[0].text);
+  assert(status.loaded === false && status.exists === false, 'config_status reports loaded:false');
+  assert(status.configPath === missingPath && /config_init/.test(status.hint), 'config_status shows path + config_init hint');
+  let guardThrew = false;
+  try { await noCfg.makeRequest('GET', undefined, '/x', {}); }
+  catch (e) { guardThrew = /config/i.test(e.message); }
+  assert(guardThrew, 'api call throws a guided config error (caught by the tool layer, no crash)');
+
+  console.log('6) config_init writes a starter config + lazy-reload picks it up:');
+  const initRes = JSON.parse(noCfg.handleConfigInit({}).content[0].text);
+  assert(initRes.written === true && initRes.path === missingPath, 'config_init wrote to the resolved path');
+  const initStatus = JSON.parse(noCfg.handleConfigStatus({}).content[0].text);
+  assert(initStatus.loaded === true && initStatus.exists === true, 'config re-read after init (no restart)');
+  const reinit = JSON.parse(noCfg.handleConfigInit({}).content[0].text);
+  assert(reinit.written === false, 'config_init refuses to overwrite without force');
+  try { unlinkSync(missingPath); } catch {}
+
+  console.log('7) SEC-1: auth is NOT attached to an unrelated absolute URL (no credential leak):');
+  // Sanity: auth DOES reach the configured host.
+  attackerGotAuth = 'UNSET';
+  await srv.makeRequest('GET', 'mock', '/users', {});
+  assert(/^Bearer TOKEN_/.test(lastAuthHeader), 'auth attached for the configured host');
+  // But a request to a different host (port) must carry no Authorization header.
+  const leak = await srv.makeRequest('GET', 'mock', `${attackerBase}/grab`, {});
+  assert(leak.success === true, 'cross-host request still succeeds');
+  assert(attackerGotAuth === null, 'no Authorization header reached the foreign host');
+
+  console.log('8) SEC-2: config_init refuses to write outside the project/config dir:');
+  const refused = JSON.parse(noCfg.handleConfigInit({ path: '/openapi-mcp-evil.json', force: true }).content[0].text);
+  assert(refused.written === false && /Refused/.test(refused.reason), 'config_init refuses an out-of-tree path');
+
   console.log('\nALL TESTS PASSED');
 } catch (e) {
   failed = true;
@@ -91,5 +139,6 @@ try {
 } finally {
   try { unlinkSync(cfgPath); } catch {}
   server.close();
+  attacker.close();
 }
 process.exit(failed ? 1 : 0);

@@ -133,6 +133,35 @@ openapi-rest-mcp --config /etc/openapi-mcp/config.json
 OPENAPI_MCP_CONFIG=/etc/openapi-mcp/config.json openapi-rest-mcp
 ```
 
+**EN:** `--config` and `OPENAPI_MCP_CONFIG` only point to *where the `config.json` file lives* —
+all settings still come from that one file. Per-project (default): no flag, the server uses
+`./config.json` in the project root. Shared/global: point at one fixed file used across projects.
+
+**TR:** `--config` ve `OPENAPI_MCP_CONFIG` yalnızca *`config.json` dosyasının yerini* gösterir —
+tüm ayarlar yine bu tek dosyadan gelir. Proje bazlı (varsayılan): bayrak yok, sunucu proje
+kökündeki `./config.json`'ı kullanır. Genel/paylaşımlı: tüm projelerde aynı sabit dosyayı gösterin.
+
+### Setup after install | Kurulumdan sonra kurulum
+
+**EN:** No config yet? The server **still starts** — it won't crash. Configure it with the
+built-in tools (Claude calls them automatically, no special command):
+
+**TR:** Henüz config yok mu? Sunucu **yine de başlar**, çökmez. Yerleşik tool'larla
+yapılandırın (Claude bunları otomatik çağırır, özel bir komut gerekmez):
+
+- **`config_init`** — writes a starter `config.json` at the resolved path (or a custom `path`). |
+  Çözülen yola (veya verilen `path`'e) başlangıç `config.json`'ı yazar.
+- **`config_status`** — reports the resolved path, whether it loaded, and the active environment. |
+  Çözülen yolu, yüklenip yüklenmediğini ve aktif ortamı raporlar.
+
+**EN:** After you create/edit `config.json` it's picked up automatically on the next tool call —
+no restart needed. Calling an API tool before configuring returns a guided error. Keep secrets
+out of the file with `${ENV_VAR}` placeholders.
+
+**TR:** `config.json`'ı oluşturup düzenledikten sonra bir sonraki tool çağrısında otomatik
+okunur — yeniden başlatmaya gerek yok. Yapılandırmadan önce bir API tool'u çağrılırsa yönlendiren
+bir hata döner. Gizli bilgileri `${ENV_VAR}` placeholder'larıyla dosya dışında tutun.
+
 ### Config field reference | Config alan referansı
 
 | Field / Alan | Scope / Kapsam | Default / Varsayılan | Description / Açıklama |
@@ -144,6 +173,8 @@ OPENAPI_MCP_CONFIG=/etc/openapi-mcp/config.json openapi-rest-mcp
 | `maxResponseChars` | root | `100000` | Max chars per tool response (`0` = unlimited; override per call with `maxChars`) / Araç yanıtı başına azami karakter (`0` = sınırsız; çağrı başına `maxChars` ile değiştirilir) |
 | `headers` | root | JSON defaults | Headers merged into every request / Her isteğe eklenen header'lar |
 | `rejectUnauthorized` | root / env | `true` (auto-`false` for localhost) | TLS verification / TLS doğrulaması |
+| `maxRedirects` | root | `0` | HTTP redirects to follow (`0` = none, avoids leaking auth across hosts) / Takip edilecek yönlendirme (`0` = yok) |
+| `maxContentLength` | root | `10485760` | Max response/request bytes (DoS guard) / Azami yanıt/istek boyutu (DoS koruması) |
 | `baseUrl` | env | — | Base URL for relative paths / Göreli yollar için temel URL |
 | `swaggerUrl` | env | — | Swagger/OpenAPI JSON URL |
 | `auth` | env | none | Authentication block (see below) / Kimlik doğrulama bloğu (aşağıya bakın) |
@@ -246,9 +277,34 @@ Explicit / Açık (manuel):
 
 ---
 
+## 🔒 Security | Güvenlik
+
+**EN:** The server holds API credentials and forwards them on the model's behalf, so it
+guards against leaking them:
+
+**TR:** Sunucu API kimlik bilgilerini tutar ve model adına iletir; bu yüzden sızdırmaya karşı
+korur:
+
+- **Host allowlist:** auth (bearer/apiKey/basic/login token) is attached **only** when the
+  target host matches the environment's `baseUrl`/`swaggerUrl`/`loginUrl`. A call to an
+  unrelated absolute URL is sent **without** credentials (and logs a warning). | Auth yalnızca
+  hedef host ortamın `baseUrl`/`swaggerUrl`/`loginUrl`'iyle eşleşince eklenir; alakasız mutlak
+  URL'ye kimlik bilgisi **gönderilmez**.
+- **No redirects by default** (`maxRedirects: 0`) so auth can't be carried to another host;
+  set `maxRedirects` in config to opt in. | Varsayılan yönlendirme yok; `maxRedirects` ile açılır.
+- **`inspect_login` masks** token/password values in its output; **`config_init`** only writes
+  inside the project / config directory; **response headers** are omitted unless you pass
+  `includeHeaders: true` (and `set-cookie` etc. are redacted). | `inspect_login` sırları
+  maskeler; `config_init` yalnızca proje/config dizinine yazar; yanıt başlıkları `includeHeaders`
+  olmadan dönmez.
+- Keep secrets in `${ENV_VAR}` placeholders, not literals; `config.json` is git-ignored. |
+  Sırları `${ENV_VAR}` ile tutun; `config.json` git'e girmez.
+
+---
+
 ## 🛠️ Available tools | Mevcut araçlar
 
-**EN:** URLs can be absolute (`https://host/path`) or relative to the environment's `baseUrl` (e.g. `/users`). Every tool also accepts `environment` (override the active one) and `maxChars` (`0` = unlimited).
+**EN:** URLs can be absolute (`https://host/path`) or relative to the environment's `baseUrl` (e.g. `/users`). Every tool also accepts `environment` (override the active one) and `maxChars` (`0` = unlimited). `api_*` tools also accept `includeHeaders` (return sanitized response headers).
 
 **TR:** URL'ler mutlak (`https://host/path`) veya ortamın `baseUrl`'ine göre göreli (örn. `/users`) olabilir. Her araç ayrıca `environment` (aktif ortamı geçersiz kılar) ve `maxChars` (`0` = sınırsız) kabul eder.
 
@@ -264,6 +320,8 @@ Explicit / Açık (manuel):
 | `swagger_list_endpoints` | List endpoints (`search` keyword, `tag`/`method` filters, `limit`) / Endpoint'leri listele (`search` kelime, `tag`/`method` filtreleri, `limit`) |
 | `swagger_get_endpoint` | Endpoint detail with `$ref` inlining / `$ref` çözümlemeli endpoint detayı |
 | `swagger_get_schema` | Schema/model definition / Şema/model tanımı |
+| `config_status` | Where config is looked for + whether it loaded / Config'in nerede arandığı + yüklenip yüklenmediği |
+| `config_init` | Write a starter `config.json` (`path`, `force`) / Başlangıç `config.json` yaz (`path`, `force`) |
 
 **EN:** Examples:
 
@@ -305,7 +363,7 @@ Claude: [uses swagger_fetch / swagger_fetch kullanır]
 
 | Error / Hata | Solution / Çözüm |
 |---|---|
-| `config.json not found` | Pass `--config` or set `OPENAPI_MCP_CONFIG` / `--config` geçin ya da `OPENAPI_MCP_CONFIG` ayarlayın |
+| `No config found` / tools say config missing | Run the `config_init` tool, then fill in `config.json` / `config_init` tool'unu çalıştırıp `config.json`'ı doldurun |
 | `Relative URL requires a baseUrl` | Add `baseUrl` to the environment / Ortama `baseUrl` ekleyin |
 | `Failed to fetch Swagger` | Check `swaggerUrl` is reachable / `swaggerUrl` erişilebilir mi kontrol edin |
 | `Login ... failed` | Check `loginUrl`, `credentials`, `tokenPath` / `loginUrl`, `credentials`, `tokenPath` kontrol edin |

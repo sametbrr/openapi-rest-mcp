@@ -1,6 +1,6 @@
 {
   "name": "openapi-rest-mcp",
-  "version": "2.1.0",
+  "version": "2.3.0",
   "description": "MCP server for any OpenAPI/Swagger REST API: CRUD calls, endpoint & schema discovery, fuzzy search, and flexible auth (bearer/apiKey/basic/auto-login). .NET-friendly.",
   "main": "src/index.js",
   "type": "module",
