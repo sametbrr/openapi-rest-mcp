@@ -12,6 +12,11 @@ const swagger = {
     '/api/auth/login': { post: { summary: 'Login', tags: ['Auth'], operationId: 'login' } },
     '/api/users': { get: { summary: 'List users', tags: ['Users'], operationId: 'getUsers' } },
     '/api/orders': { post: { summary: 'Create order', tags: ['Orders'], operationId: 'createOrder' } },
+    '/api/health': {
+      head: { summary: 'Health headers', tags: ['Health'], operationId: 'headHealth' },
+      options: { summary: 'Health options', tags: ['Health'], operationId: 'optionsHealth' },
+      trace: { summary: 'Health trace', tags: ['Health'], operationId: 'traceHealth' },
+    },
   },
   components: { schemas: {} },
 };
@@ -88,6 +93,15 @@ try {
   console.log('3) fuzzy endpoint search:');
   const search = JSON.parse((await srv.handleSwaggerListEndpoints({ environment: 'mock', search: 'order' })).content[0].text);
   assert(search.totalEndpoints === 1 && search.endpoints[0].path === '/api/orders', 'search "order" -> /api/orders only');
+
+  const trace = JSON.parse((await srv.handleSwaggerListEndpoints({ environment: 'mock', method: 'TRACE' })).content[0].text);
+  assert(trace.totalEndpoints === 1 && trace.endpoints[0].operationId === 'traceHealth', 'TRACE endpoints are listed');
+
+  const options = JSON.parse((await srv.handleSwaggerGetEndpoint({ environment: 'mock', path: '/api/health', method: 'OPTIONS' })).content[0].text);
+  assert(options.success === true && options.operationId === 'optionsHealth', 'OPTIONS endpoint details are returned');
+
+  const head = JSON.parse((await srv.handleSwaggerGetEndpoint({ environment: 'mock', path: '/api/health', method: 'HEAD' })).content[0].text);
+  assert(head.success === true && head.operationId === 'headHealth', 'HEAD endpoint details are returned');
 
   console.log('4) response truncation via maxChars:');
   const truncated = (await srv.handleSwaggerListEndpoints({ environment: 'mock', maxChars: 200 })).content[0].text;
