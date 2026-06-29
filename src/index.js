@@ -11,6 +11,8 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const OPENAPI_HTTP_METHODS = ['get', 'post', 'put', 'delete', 'patch', 'head', 'options', 'trace'];
+const OPENAPI_HTTP_METHOD_ENUM = OPENAPI_HTTP_METHODS.map((method) => method.toUpperCase());
 
 const HELP = `openapi-rest-mcp - MCP server for any OpenAPI/Swagger REST API
 
@@ -384,7 +386,7 @@ export class OpenApiMcpServer {
         this.warnedAuthSkips.add(key);
         const allowed = [...this.allowedAuthHosts(env)].join(', ') || '(none)';
         console.error(
-          `Warning: not attaching "${name}" auth to ${url} — host is outside the allowed hosts (${allowed}).`
+          `Warning: not attaching "${name}" auth to ${url} - host is outside the allowed hosts (${allowed}).`
         );
       }
       return { headers: {}, params: {} };
@@ -697,7 +699,7 @@ export class OpenApiMcpServer {
     const urlProp = {
       type: 'string',
       description:
-        'API URL — absolute (https://host/path) or relative to the environment baseUrl (e.g. /users)',
+        'API URL - absolute (https://host/path) or relative to the environment baseUrl (e.g. /users)',
     };
     const headersProp = {
       type: 'object',
@@ -723,7 +725,6 @@ export class OpenApiMcpServer {
       type: 'boolean',
       description: 'Include sanitized response headers in the result (default: false).',
     };
-    const methodEnum = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
     // Enum is filled in fresh on each ListTools call (see below) so it reflects
     // a config that may have been created/loaded after startup.
     const environmentProp = {
@@ -802,7 +803,11 @@ export class OpenApiMcpServer {
                   'Fuzzy keyword(s) matched across path, summary, description, tags and operationId (space-separated terms, ranked by matches).',
               },
               tag: { type: 'string', description: 'Filter endpoints by tag/controller name' },
-              method: { type: 'string', description: 'Filter by HTTP method', enum: methodEnum },
+              method: {
+                type: 'string',
+                description: 'Filter by HTTP method',
+                enum: OPENAPI_HTTP_METHOD_ENUM,
+              },
               limit: { type: 'number', description: 'Max number of endpoints to return' },
               maxChars: maxCharsProp,
             },
@@ -815,7 +820,7 @@ export class OpenApiMcpServer {
             type: 'object',
             properties: {
               path: { type: 'string', description: 'API endpoint path (e.g., /api/users/{id})' },
-              method: { type: 'string', description: 'HTTP method', enum: methodEnum },
+              method: { type: 'string', description: 'HTTP method', enum: OPENAPI_HTTP_METHOD_ENUM },
               environment: environmentProp,
               resolveRefs: {
                 type: 'boolean',
@@ -992,7 +997,7 @@ export class OpenApiMcpServer {
     }
     writeFileSync(target, template);
     // When written to the path the server reads from, the next status/tool call
-    // picks it up via tryLoadConfig() — no restart needed.
+    // picks it up via tryLoadConfig() - no restart needed.
     return this.json(
       {
         written: true,
@@ -1018,7 +1023,7 @@ export class OpenApiMcpServer {
     if (!args.credentials && !this.authAllowedForUrl(env, loginUrl)) {
       const allowed = [...this.allowedAuthHosts(env)].join(', ') || '(none)';
       throw new Error(
-        `Refusing to send "${name}" credentials to ${loginUrl} — host is outside the allowed hosts (${allowed}). ` +
+        `Refusing to send "${name}" credentials to ${loginUrl} - host is outside the allowed hosts (${allowed}). ` +
           `Pass explicit "credentials" to probe a different host.`
       );
     }
@@ -1077,7 +1082,7 @@ export class OpenApiMcpServer {
 
     for (const [path, methods] of Object.entries(paths)) {
       for (const [method, details] of Object.entries(methods)) {
-        if (!['get', 'post', 'put', 'delete', 'patch'].includes(method.toLowerCase())) continue;
+        if (!OPENAPI_HTTP_METHODS.includes(method.toLowerCase())) continue;
         if (args.tag && !details.tags?.includes(args.tag)) continue;
         if (args.method && method.toUpperCase() !== args.method.toUpperCase()) continue;
 
