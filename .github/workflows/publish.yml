@@ -31,6 +31,10 @@ jobs:
 
       - run: npm install
 
+      # npm always packs README* files and may show README.tr.md on the
+      # package page; publish with the English README only.
+      - run: rm -f README.tr.md
+
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
