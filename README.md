@@ -293,7 +293,7 @@ npm test           # mock-API smoke test
 
 ### Publishing
 
-Pushing a `vX.Y.Z` git tag triggers the GitHub Actions workflow that publishes to npm and creates a GitHub Release. The tag must match the `version` in `package.json`, and an `NPM_TOKEN` repository secret must be set.
+Pushing a `vX.Y.Z` git tag triggers the GitHub Actions workflow that publishes to npm and creates a GitHub Release. The tag must match the `version` in `package.json`. Publishing uses npm trusted publishing (OIDC) from the protected `npm` environment, so no npm token is stored, and every release carries a provenance statement.
 
 ```bash
 git tag v2.1.0

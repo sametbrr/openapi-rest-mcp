@@ -293,7 +293,7 @@ npm test           # sahte API ile duman testi
 
 ### Yayınlama
 
-`vX.Y.Z` formatında bir git tag'i push etmek, npm'e yayınlayan ve GitHub Release oluşturan GitHub Actions workflow'unu tetikler. Tag, `package.json` içindeki `version` ile eşleşmeli ve depoda `NPM_TOKEN` secret'ı tanımlı olmalıdır.
+`vX.Y.Z` formatında bir git tag'i push etmek, npm'e yayınlayan ve GitHub Release oluşturan GitHub Actions workflow'unu tetikler. Tag, `package.json` içindeki `version` ile eşleşmelidir. Yayın, korumalı `npm` ortamından npm trusted publishing (OIDC) ile yapılır; npm token'ı saklanmaz ve her sürüm bir provenance kaydı taşır.
 
 ```bash
 git tag v2.1.0
