@@ -1,6 +1,8 @@
 [![npm version](https://badge.fury.io/js/openapi-rest-mcp.svg)](https://badge.fury.io/js/openapi-rest-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+[Hızlı Başlangıç](#hızlı-başlangıç) • [Kurulum](#kurulum) • [Kullanım](#kullanım) • [Yapılandırma](#yapılandırma) • [Sorun Giderme](#sorun-giderme) • [Katkıda Bulunma](#katkıda-bulunma)
+
 # OpenAPI REST MCP Sunucusu
 
 Claude AI'ın **herhangi bir OpenAPI/Swagger REST API'siyle** CRUD işlemleri üzerinden konuşmasını sağlayan bir Model Context Protocol (MCP) sunucusu — .NET, Node, Spring, FastAPI ve daha fazlasıyla çalışır. Ortam bazlı esnek kimlik doğrulama (sıfır-config otomatik login dahil), `${ENV_VAR}` ile gizli bilgi enjeksiyonu, fuzzy endpoint araması ve `$ref` çözümlemeli şema keşfi sunar.
@@ -23,29 +25,31 @@ npm install openapi-rest-mcp
 claude mcp add openapi-rest openapi-rest-mcp -- --config /absolute/path/to/config.json
 ```
 
-Ardından `config.json`'ı kopyalayıp doldurun — bkz. **Yapılandırma**.
+Ardından `config.json`'ı kopyalayıp doldurun — bkz. [Yapılandırma](#yapılandırma).
 
 ---
 
 ## Özellikler
 
-- HTTP metodları: GET, POST, PUT, DELETE, PATCH
-- `$ref` çözümlemeli Swagger/OpenAPI entegrasyonu
-- Birden çok adlandırılmış ortam (local, development, beta, production, …)
-- Swagger'dan endpoint keşfi, **fuzzy anahtar kelime araması** ve şema getirme
-- Ortam bazlı esnek kimlik doğrulama: `none`, `bearer`, `apiKey`, `basic`, `login`
-- **Sıfır-config `login`**: login endpoint'ini otomatik bulur ve yanıttaki token'ı otomatik tespit eder
-- Doğru token yolunu tahmin etmeden bulmak için `inspect_login` aracı
-- Context penceresini korumak için **yanıt kısaltma** (`maxResponseChars` / çağrı bazlı `maxChars`)
-- `${ENV_VAR}` ikamesi — gizli bilgileri `config.json` dışında tutun
-- Yapılandırılabilir config yolu (`--config`, `OPENAPI_MCP_CONFIG`)
-- Ortam bazlı TLS kontrolü ve Swagger yanıt önbelleği
+| | |
+|---|---|
+| **Tüm HTTP metodları** | Herhangi bir REST API'ye GET, POST, PUT, DELETE ve PATCH |
+| **Swagger/OpenAPI entegrasyonu** | Spec'i okur ve `$ref` şemalarını çözümler |
+| **Çoklu ortam** | Değiştirilebilir varsayılanla adlandırılmış ortamlar (local, development, beta, production, …) |
+| **Endpoint keşfi** | Swagger'dan fuzzy anahtar kelime araması, tag/metod filtreleri ve şema getirme |
+| **Esnek kimlik doğrulama** | Ortam bazında `none`, `bearer`, `apiKey`, `basic` veya `login` |
+| **Sıfır-config `login`** | Login endpoint'ini otomatik bulur ve yanıttaki token'ı otomatik tespit eder |
+| **`inspect_login` aracı** | Doğru token yolunu tahmin etmeden bulur |
+| **Yanıt kısaltma** | `maxResponseChars` / çağrı bazlı `maxChars` context penceresini korur |
+| **`${ENV_VAR}` ikamesi** | Gizli bilgileri `config.json` dışında tutar |
+| **Yapılandırılabilir config yolu** | `--config` argümanı veya `OPENAPI_MCP_CONFIG` ortam değişkeni |
+| **TLS kontrolü ve önbellek** | Ortam bazlı TLS doğrulaması ve Swagger yanıt önbelleği |
 
 ---
 
 ## Gereksinimler
 
-- Node.js >= 18.0.0
+- Node.js 22 veya üzeri (LTS)
 - OpenAPI/Swagger JSON endpoint'ine sahip herhangi bir REST API (.NET, Node, Spring, FastAPI, …)
 
 ---
@@ -55,6 +59,52 @@ Ardından `config.json`'ı kopyalayıp doldurun — bkz. **Yapılandırma**.
 ```bash
 npm install -g openapi-rest-mcp   # global — Claude Desktop için
 npm install openapi-rest-mcp      # yerel  — Claude Code projeleri için
+```
+
+Binary'nin çalıştığını kontrol edin:
+
+```bash
+npx openapi-rest-mcp --version
+npx openapi-rest-mcp --help
+```
+
+---
+
+## Kullanım
+
+URL'ler mutlak (`https://host/path`) veya ortamın `baseUrl`'ine göre göreli (örn. `/users`) olabilir. Her araç `environment` (aktif ortamı geçersiz kılar) ve `maxChars` (`0` = sınırsız) kabul eder. `api_*` araçları ayrıca `includeHeaders` kabul eder.
+
+| Araç | Açıklama |
+|---|---|
+| `api_get` | GET isteği |
+| `api_post` | POST isteği (oluşturma) |
+| `api_put` | PUT isteği (değiştirme) |
+| `api_delete` | DELETE isteği |
+| `api_patch` | PATCH isteği (kısmi güncelleme) |
+| `inspect_login` | Login endpoint'ini yokla; ham yanıt + önerilen token yollarını döndür |
+| `swagger_fetch` | Swagger dokümanını getir ve özetle |
+| `swagger_list_endpoints` | Endpoint'leri listele (`search` kelime, `tag`/`method` filtreleri, `limit`) |
+| `swagger_get_endpoint` | `$ref` çözümlemeli endpoint detayı |
+| `swagger_get_schema` | Şema/model tanımı |
+| `config_status` | Config'in nerede arandığı + yüklenip yüklenmediği |
+| `config_init` | Başlangıç `config.json` yaz (`path`, `force`) |
+
+Örnekler:
+
+```javascript
+api_get("/users", { include: "profile" })
+api_post("/users", { name: "John Doe", email: "john@example.com" })
+api_put("/users/123", { name: "Jane Doe" })
+api_delete("/users/123")
+api_patch("/users/123", { email: "new@example.com" })
+api_get("/reports/huge", {}, { maxChars: 0 })   // sınırsız
+
+inspect_login({ environment: "local" })
+swagger_fetch({ environment: "beta" })
+swagger_list_endpoints({ search: "order create", limit: 10 })
+swagger_list_endpoints({ tag: "User", method: "POST" })
+swagger_get_endpoint({ path: "/api/users/{id}", method: "GET" })
+swagger_get_schema({ schemaName: "UserDto" })
 ```
 
 ---
@@ -115,9 +165,9 @@ Henüz config yok mu? Sunucu **yine de başlar**, çökmez. Yerleşik araçlarla
 | `timeout` | root | `30000` | İstek zaman aşımı (ms) |
 | `swaggerCacheTtl` | root | `300` | Swagger önbellek süresi (sn) |
 | `maxResponseChars` | root | `100000` | Araç yanıtı başına azami karakter (`0` = sınırsız; çağrı başına `maxChars` ile değiştirilir) |
-| `headers` | root | JSON defaults | Her isteğe eklenen header'lar |
+| `headers` | root | JSON varsayılanları | Her isteğe eklenen header'lar |
 | `rejectUnauthorized` | root / env | `true` (localhost için otomatik `false`) | TLS doğrulaması |
-| `maxRedirects` | root | `0` | Takip edilecek HTTP yönlendirme sayısı |
+| `maxRedirects` | root | `0` | Takip edilecek HTTP yönlendirme sayısı (`0` = hiç; auth'un başka host'lara sızmasını önler) |
 | `maxContentLength` | root | `10485760` | Azami yanıt/istek boyutu (DoS koruması) |
 | `baseUrl` | env | — | Göreli yollar için temel URL |
 | `swaggerUrl` | env | — | Swagger/OpenAPI JSON URL |
@@ -125,9 +175,7 @@ Henüz config yok mu? Sunucu **yine de başlar**, çökmez. Yerleşik araçlarla
 
 Herhangi bir string değer `${ENV_VAR}` yer tutucusu içerebilir; yükleme anında ilgili ortam değişkeniyle değiştirilir.
 
----
-
-## Kimlik Doğrulama
+### Kimlik doğrulama
 
 Kimlik doğrulama, `type` içeren bir `auth` nesnesiyle **ortam bazında** yapılandırılır. API'niz herkese açıksa `auth` bloğunu hiç eklemeyin.
 
@@ -171,7 +219,7 @@ Açık (manuel):
 }
 ```
 
-> **İpucu:** otomatik tespit yanlış token'ı seçerse `inspect_login` aracını çalıştırın — kimlik bilgilerinizi POST edip ham yanıtı ve önerilen `tokenPath` değerlerini döndürür.
+> **Not:** otomatik tespit yanlış token'ı seçerse `inspect_login` aracını çalıştırın — kimlik bilgilerinizi POST edip ham yanıtı ve önerilen `tokenPath` değerlerini döndürür.
 
 | `login` alanı | Zorunlu | Açıklama |
 |---|---|---|
@@ -182,11 +230,9 @@ Açık (manuel):
 | `headerName` / `headerPrefix` | opsiyonel | Varsayılan `Authorization` / `Bearer ` |
 | `method` / `headers` | opsiyonel | Login istek metodu (varsayılan `POST`) ve ek header'lar |
 
-> **1.x'ten geçiş:** eski düz `auth: { email, password }` artık desteklenmiyor. Bu değerleri bir `auth` nesnesine taşıyın — çoğu API `type: "login"` veya `type: "basic"` ile eşleşir.
+> **Dikkat:** 1.x'ten geçerken eski düz `auth: { email, password }` biçiminin artık desteklenmediğini unutmayın. Bu değerleri bir `auth` nesnesine taşıyın — çoğu API `type: "login"` veya `type: "basic"` ile eşleşir.
 
----
-
-## Çoklu Ortam
+### Çoklu ortam
 
 İhtiyacınız kadar ortam tanımlayın ve `activeEnvironment` ile geçiş yapın (veya herhangi bir araca `environment` geçirin).
 
@@ -209,70 +255,28 @@ Açık (manuel):
 
 ---
 
+## Sorun Giderme
+
+**`No config found`** — `config_init` aracını çalıştırın, sonra `config.json`'ı doldurun.
+
+**`Relative URL requires a baseUrl`** — ortama `baseUrl` ekleyin.
+
+**`Failed to fetch Swagger`** — `swaggerUrl`'nin sunucuyu çalıştıran makineden erişilebilir olduğunu kontrol edin.
+
+**`Login ... failed`** — `loginUrl`, `credentials` ve `tokenPath`'i kontrol edin; ham yanıtı görmek için `inspect_login`'i çalıştırın.
+
+**TLS / sertifika hataları** — o ortam için `rejectUnauthorized: false` yapın.
+
+---
+
 ## Güvenlik
 
 Sunucu API kimlik bilgilerini tutar ve model adına iletir:
 
-- **Host allowlist:** Auth token'ları yalnızca hedef host, ortamın `baseUrl`/`swaggerUrl`/`loginUrl`'iyle eşleştiğinde eklenir. Alakasız mutlak URL'lere kimlik bilgisi gönderilmez.
-- **Varsayılan yönlendirme yok** (`maxRedirects: 0`) — auth başka bir host'a taşınamaz; `maxRedirects` ile açılır.
-- **`inspect_login`** token/şifre değerlerini maskeler; **`config_init`** yalnızca proje/config dizinine yazar; **yanıt başlıkları** `includeHeaders: true` olmadan dönmez.
-- Gizli bilgileri `${ENV_VAR}` placeholder'larıyla tutun; `config.json` git'e girmez.
-
----
-
-## Kullanım
-
-URL'ler mutlak (`https://host/path`) veya ortamın `baseUrl`'ine göre göreli (örn. `/users`) olabilir. Her araç `environment` (aktif ortamı geçersiz kılar) ve `maxChars` (`0` = sınırsız) kabul eder.
-
-| Araç | Açıklama |
-|---|---|
-| `api_get` | GET isteği |
-| `api_post` | POST isteği (oluşturma) |
-| `api_put` | PUT isteği (değiştirme) |
-| `api_delete` | DELETE isteği |
-| `api_patch` | PATCH isteği (kısmi güncelleme) |
-| `inspect_login` | Login endpoint'ini yokla; ham yanıt + önerilen token yollarını döndür |
-| `swagger_fetch` | Swagger dokümanını getir ve özetle |
-| `swagger_list_endpoints` | Endpoint'leri listele (`search` kelime, `tag`/`method` filtreleri, `limit`) |
-| `swagger_get_endpoint` | `$ref` çözümlemeli endpoint detayı |
-| `swagger_get_schema` | Şema/model tanımı |
-| `config_status` | Config'in nerede arandığı + yüklenip yüklenmediği |
-| `config_init` | Başlangıç `config.json` yaz (`path`, `force`) |
-
-Örnekler:
-
-```javascript
-api_get("/users", { include: "profile" })
-api_post("/users", { name: "John Doe", email: "john@example.com" })
-api_put("/users/123", { name: "Jane Doe" })
-api_delete("/users/123")
-api_patch("/users/123", { email: "new@example.com" })
-api_get("/reports/huge", {}, { maxChars: 0 })   // sınırsız
-
-inspect_login({ environment: "local" })
-swagger_fetch({ environment: "beta" })
-swagger_list_endpoints({ search: "order create", limit: 10 })
-swagger_list_endpoints({ tag: "User", method: "POST" })
-swagger_get_endpoint({ path: "/api/users/{id}", method: "GET" })
-swagger_get_schema({ schemaName: "UserDto" })
-```
-
----
-
-## Kurulumu Doğrulama
-
-```bash
-npx openapi-rest-mcp --version
-npx openapi-rest-mcp --help
-```
-
-| Hata | Çözüm |
-|---|---|
-| `No config found` | `config_init` aracını çalıştırın, sonra `config.json`'ı doldurun |
-| `Relative URL requires a baseUrl` | Ortama `baseUrl` ekleyin |
-| `Failed to fetch Swagger` | `swaggerUrl`'nin erişilebilir olduğunu kontrol edin |
-| `Login ... failed` | `loginUrl`, `credentials`, `tokenPath` kontrol edin |
-| TLS / sertifika hataları | O ortam için `rejectUnauthorized: false` yapın |
+- **Host allowlist:** Auth token'ları **yalnızca** hedef host, ortamın `baseUrl`/`swaggerUrl`/`loginUrl`'iyle eşleştiğinde eklenir. Alakasız mutlak URL'lere istekler kimlik bilgisi **olmadan** gönderilir.
+- **Varsayılan olarak yönlendirme yok** (`maxRedirects: 0`) — auth başka bir host'a taşınamaz; açmak için config'de `maxRedirects` ayarlayın.
+- **`inspect_login`** çıktısında token/şifre değerlerini **maskeler**; **`config_init`** yalnızca proje/config dizinine yazar; **yanıt header'ları** `includeHeaders: true` verilmedikçe dönmez.
+- Gizli bilgileri düz değer olarak değil `${ENV_VAR}` placeholder'larıyla tutun; `config.json` git tarafından yok sayılır.
 
 ---
 
@@ -298,19 +302,31 @@ git push origin v2.1.0
 
 ---
 
-## Yazar
-
-Samet Birer
-
 ## Bağlantılar
 
 - [GitHub Deposu](https://github.com/sametbrr/openapi-rest-mcp)
 - [NPM Paketi](https://www.npmjs.com/package/openapi-rest-mcp)
-- [Sorun Bildir](https://github.com/sametbrr/openapi-rest-mcp/issues)
 - [Model Context Protocol](https://modelcontextprotocol.io)
+
+---
+
+## Katkıda Bulunma
+
+- Sorular ve fikirler: [Discussions](https://github.com/sametbrr/openapi-rest-mcp/discussions)
+- Hatalar: [issue takibi](https://github.com/sametbrr/openapi-rest-mcp/issues)
+- Pull request'ler: önce [katkı rehberini](https://github.com/sametbrr/.github/blob/main/CONTRIBUTING.md) okuyun
+- Güvenlik bildirimleri: herkese açık issue yerine [güvenlik politikasını](https://github.com/sametbrr/openapi-rest-mcp/security/policy) izleyin
 
 ---
 
 ## Lisans
 
 MIT — bkz. [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+[Hata Bildir](https://github.com/sametbrr/openapi-rest-mcp/issues) · [Özellik İste](https://github.com/sametbrr/openapi-rest-mcp/issues)
+
+</div>
