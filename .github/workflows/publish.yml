@@ -2,8 +2,7 @@
 # Trigger: a tag v<major>.<minor>.<patch> pushed from main.
 # Then: smoke test, publish to npm with provenance, create a GitHub release with generated notes.
 # Guards: the tag commit must be on main and the tag must equal package.json `version`.
-# Auth: an NPM_TOKEN secret, or npm trusted publishing (configure the repo on npmjs.com and
-# leave NPM_TOKEN unset).
+# Auth: npm trusted publishing (OIDC, environment npm). No npm token is stored; provenance is automatic.
 name: Publish
 
 on:
@@ -21,6 +20,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: npm
     steps:
       - uses: actions/checkout@v7
         with:
@@ -59,9 +59,10 @@ jobs:
 
       - name: Publish to npm
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           VERSION: ${{ steps.v.outputs.version }}
         run: |
+          # Trusted publishing needs npm >= 11.5.1 (bundled with current Node LTS).
+          node -e 'const [a,b,c]=process.argv[1].split(".").map(Number); if (a<11||(a==11&&(b<5||(b==5&&c<1)))) { console.error("npm "+process.argv[1]+" is too old for trusted publishing"); process.exit(1) }' "$(npm --version)"
           NAME=$(jq -r '.name' package.json)
           if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
             echo "${NAME}@${VERSION} is already on npm; skipping publish."
